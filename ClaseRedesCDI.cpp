@@ -2,11 +2,21 @@
 //
 
 #include <iostream>
+#include <SFML/Network.hpp>
+
 
 int main()
 {
     std::cout << "Hello World!\n";
+
+    sf::TcpSocket socket;
 }
+
+
+
+
+
+
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
 // Debug program: F5 or Debug > Start Debugging menu
