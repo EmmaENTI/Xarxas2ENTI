@@ -1,6 +1,7 @@
 #include <iostream>
 #include <conio.h>
 #include <SFML/Network.hpp>
+#include "ConsoleControl.h"
 
 //CHAT DEL ABRAHAM
 void RunClient();
@@ -15,10 +16,8 @@ int main()
 
     do
     {
-        if (_kbhit())
-        {
-            mode = _getch();
-        }
+        //Se le pone el Wait por el bloqueante
+        mode = ConsoleControl::WaitForReadNextChar();
     } while (mode != 'C' && mode != 'c' && mode != 'S' && mode != 's');
 
     switch (mode)
@@ -53,7 +52,11 @@ void RunClient()
 {
     std::cout << "Client";
 
-    sf::TcpSocket socket;
+
+
+
+    //OLD
+    /*sf::TcpSocket socket;
     sf::Socket::Status status = socket.connect("10.40.1.123", port);
 
     if (status != sf::Socket::Done)
@@ -81,7 +84,7 @@ void RunClient()
         {
             std::cout << std::endl << "Error Sending Message";
         }
-    }
+    }*/
 }
 
 void RunServer()
@@ -89,7 +92,7 @@ void RunServer()
     //Crear un listener para escuchar las conexiones.
     std::cout << "Server";
 
-    sf::TcpListener listener;
+    /*sf::TcpListener listener;
 
     if (listener.listen(port) != sf::Socket::Done)
     {
@@ -133,5 +136,5 @@ void RunServer()
                 std::cout << std::endl << message;
             }
         }
-    }
+    }*/
 }
