@@ -1,7 +1,7 @@
 #include <iostream>
 #include <conio.h>
 #include <SFML/Network.hpp>
-#include "ConsoleControl.h"
+#include "Chat.h"
 
 //CHAT DEL ABRAHAM
 void RunClient();
@@ -52,7 +52,11 @@ void RunClient()
 {
     std::cout << "Client";
 
+    std::cout << std::endl << "Set Server IP-> ";
+    std::string ip;
+    std::getline(std::cin, ip);
 
+    Chat* chat = Chat::Client(ip, port);
 
 
     //OLD
@@ -91,6 +95,8 @@ void RunServer()
 {
     //Crear un listener para escuchar las conexiones.
     std::cout << "Server";
+    Chat* chat = Chat::Server(port);
+
 
     /*sf::TcpListener listener;
 

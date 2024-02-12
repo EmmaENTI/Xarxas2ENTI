@@ -11,7 +11,7 @@ void Chat::ShowMessage(std::string message)
     ConsoleControl::UnlockMutex();
 }
 
-void Chat::ShowWarning(std::string message)
+void Chat::ShowAlert(std::string message)
 {
     ConsoleControl::LockMutex();
     ConsoleControl::SetColor(ConsoleControl::YELLOW);
@@ -35,47 +35,173 @@ void Chat::ListenClientsConnections(unsigned short port)
 
     if (listener.listen(port) != sf::Socket::Done)
     {
-        std::cout << std::endl << "Error on start listener";
+        ShowError("Error on Start Listener");
         return;
     }
     sf::IpAddress ipAdress = sf::IpAddress::getLocalAddress();  //El client sha de conectar a tu, aixi que has de saber la ip previament
     //En aquest cas es red local
-
-    std::cout << std::endl << "Listening on IP: " + ipAdress.toString();
+    ShowAlert("Listening on IP: " + ipAdress.toString());
 
     sf::TcpSocket client;
 
     if (listener.accept(client) != sf::Socket::Done)
     {
-        std::cout << std::endl << "Error on accept client";
+        ShowError("Error on Accept Client");
         return;
     }
 
-    std::cout << std::endl << "Client Connected " << client.getRemoteAddress().toString();
 
     while (true)
     {
-        char data[100];
-        std::size_t received;
+        sf::TcpSocket* client = new sf::TcpSocket();
+        sf::Socket::Status status = listener.accept(*client);
 
+        switch (status)
+        {
+        case sf::Socket::Done: {
+            //Client Done
+            std::thread clientThread = std::thread(&Chat::OnClientEnter, this, client);
+            clientThread.detach();
+        }
+            break;
+        case sf::Socket::NotReady:
+            //Client Not ready
+            break;
+        case sf::Socket::Partial:
+            //Client Partial
+            break;
+        case sf::Socket::Disconnected:
+            //Client Disconnected
+            break;
+        case sf::Socket::Error:
+            //Client Error
+            break;
+        default:
+            break;
+        }
+    }
+}
+
+void Chat::OnConnectToServer(std::string ip, unsigned short port)
+{
+    sf::TcpSocket* socket = new sf::TcpSocket();
+    sf::Socket::Status status = socket->connect(ip, port);
+
+    if (status != sf::Socket::Done)
+    {
+        ShowError("Error on connect to server");
+        return;
+    }
+
+    _isServerMutex.lock();
+    _sockets.push_back(socket);
+    _isServerMutex.unlock();
+
+    ShowAlert("Connected to Server");
+
+    //Listen Keyboard
+    std::thread keyboardThread = std::thread(&Chat::ListenKeyboardToSendMessage, this);
+    keyboardThread.detach();
+
+    std::thread listenMessageThread = std::thread(&Chat::ListenMessages, this, socket);
+    listenMessageThread.detach();
+}
+
+void Chat::OnClientEnter(sf::TcpSocket* client)
+{
+    _isServerMutex.lock();
+    _sockets.push_back(client);
+    _isServerMutex.unlock();
+
+    ShowAlert("Client Accepted IP:" + client->getRemoteAddress().toString());
+
+    ListenMessages(client);
+}
+
+void Chat::ListenMessages(sf::TcpSocket* socket)
+{
+    while (true)
+    {
+        char data[100] = {};
+        std::size_t recieved;
         std::string message;
 
-        if (client.receive(data, 100, received) != sf::Socket::Done)
+        if (socket->receive(data, 100, recieved) != sf::Socket::Done) 
         {
-            std::cout << std::endl << "Error recieve message";
+            ShowError("Error recieve message");
         }
         else
         {
-            for (size_t i = 0; i < received; i++)
+            for (size_t i = 0; i < recieved; i++)
             {
                 char c = data[i];
                 message += c;
+            }
+            ShowMessage(message);
 
+            _isServerMutex.lock();
+            bool isServer = _isServer;
+            _isServerMutex.unlock();
 
-                std::cout << std::endl << message;
+            if (_isServer)
+            {
+                SendMessage(message);
             }
         }
     }
+}
+
+void Chat::ListenKeyboardToSendMessage()
+{
+    std::string message = "";
+    while (true)
+    {
+        char c = ConsoleControl::WaitForReadNextChar();
+
+        if (c == KB_Enter)
+        {
+            SendMessage(message);
+            message = "";
+        }
+        else
+        {
+            message += c;
+        }
+    }
+}
+
+void Chat::SendMessage(std::string message)
+{
+    char data[100] = {};
+
+    int stringSize = message.length();
+    for (int i = 0; i < stringSize; i++)
+    {
+        char c = message[i];
+        data[i] = c;
+    }
+
+    //Si som server ens mostrem el msg tambe
+    _isServerMutex.lock();
+    bool isServer = _isServer;
+    _isServerMutex.unlock();
+
+    if (_isServer)
+    {
+        ShowMessage(message);
+    }
+
+
+
+    _isServerMutex.lock();
+    for (sf::TcpSocket* socket : _sockets)
+    {
+        if (socket->send(data, 100) != sf::Socket::Done)
+        {
+            ShowError("Error Sending Message");
+        }
+    }
+    _isServerMutex.unlock();
 }
 
 Chat* Chat::Server(unsigned short port)
@@ -84,7 +210,14 @@ Chat* Chat::Server(unsigned short port)
 
     chat->_serverAddress = sf::IpAddress::getLocalAddress();
 
-    //Escuchar a los que se conectan
+    chat->_isServer = true;
+    //Listen Clients
+    std::thread listenerThread = std::thread(&Chat::ListenClientsConnections, chat, port);
+    listenerThread.detach();
+
+    //Listen Keyboard
+    std::thread keyboardThread = std::thread(&Chat::ListenKeyboardToSendMessage, chat);
+    keyboardThread.detach();
 
     return chat;
 }
@@ -92,8 +225,8 @@ Chat* Chat::Server(unsigned short port)
 Chat* Chat::Client(std::string ip, unsigned short port)
 {
     Chat* chat = new Chat();
-
-
+    chat->_serverAddress = sf::IpAddress(ip);
+    chat->OnConnectToServer(ip, port);
 
     return chat;
 }
