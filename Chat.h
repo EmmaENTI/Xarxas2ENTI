@@ -12,8 +12,10 @@ class Chat
 {
 private:
 	bool _isServer = false;
-	std::list<sf::TcpSocket*> _sockets;
 	std::mutex _isServerMutex;
+
+	std::list<sf::TcpSocket*> _sockets;
+	std::mutex _socketsMutex;
 
 	std::vector<std::string> _messages;
 	std::mutex _messageMutex; //La mayoria de mutex nos interesan por puntero

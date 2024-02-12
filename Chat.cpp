@@ -42,15 +42,6 @@ void Chat::ListenClientsConnections(unsigned short port)
     //En aquest cas es red local
     ShowAlert("Listening on IP: " + ipAdress.toString());
 
-    sf::TcpSocket client;
-
-    if (listener.accept(client) != sf::Socket::Done)
-    {
-        ShowError("Error on Accept Client");
-        return;
-    }
-
-
     while (true)
     {
         sf::TcpSocket* client = new sf::TcpSocket();
@@ -93,9 +84,9 @@ void Chat::OnConnectToServer(std::string ip, unsigned short port)
         return;
     }
 
-    _isServerMutex.lock();
+    _socketsMutex.lock();
     _sockets.push_back(socket);
-    _isServerMutex.unlock();
+    _socketsMutex.unlock();
 
     ShowAlert("Connected to Server");
 
@@ -109,9 +100,9 @@ void Chat::OnConnectToServer(std::string ip, unsigned short port)
 
 void Chat::OnClientEnter(sf::TcpSocket* client)
 {
-    _isServerMutex.lock();
+    _socketsMutex.lock();
     _sockets.push_back(client);
-    _isServerMutex.unlock();
+    _socketsMutex.unlock();
 
     ShowAlert("Client Accepted IP:" + client->getRemoteAddress().toString());
 
@@ -143,7 +134,7 @@ void Chat::ListenMessages(sf::TcpSocket* socket)
             bool isServer = _isServer;
             _isServerMutex.unlock();
 
-            if (_isServer)
+            if (isServer)
             {
                 SendMessage(message);
             }
@@ -161,6 +152,17 @@ void Chat::ListenKeyboardToSendMessage()
         if (c == KB_Enter)
         {
             SendMessage(message);
+
+            //Si som server ens mostrem el msg tambe
+            _isServerMutex.lock();
+            bool isServer = _isServer;
+            _isServerMutex.unlock();
+
+            if (isServer)
+            {
+                ShowMessage(message);
+            }
+
             message = "";
         }
         else
@@ -181,19 +183,8 @@ void Chat::SendMessage(std::string message)
         data[i] = c;
     }
 
-    //Si som server ens mostrem el msg tambe
-    _isServerMutex.lock();
-    bool isServer = _isServer;
-    _isServerMutex.unlock();
 
-    if (_isServer)
-    {
-        ShowMessage(message);
-    }
-
-
-
-    _isServerMutex.lock();
+    _socketsMutex.lock();
     for (sf::TcpSocket* socket : _sockets)
     {
         if (socket->send(data, 100) != sf::Socket::Done)
@@ -201,7 +192,7 @@ void Chat::SendMessage(std::string message)
             ShowError("Error Sending Message");
         }
     }
-    _isServerMutex.unlock();
+    _socketsMutex.unlock();
 }
 
 Chat* Chat::Server(unsigned short port)
