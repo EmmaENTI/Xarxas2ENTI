@@ -113,21 +113,18 @@ void Chat::ListenMessages(sf::TcpSocket* socket)
 {
     while (true)
     {
-        char data[100] = {};
-        std::size_t recieved;
+        sf::Packet packet;
+
         std::string message;
 
-        if (socket->receive(data, 100, recieved) != sf::Socket::Done) 
+        if (socket->receive(packet) != sf::Socket::Done) 
         {
             ShowError("Error recieve message");
         }
         else
         {
-            for (size_t i = 0; i < recieved; i++)
-            {
-                char c = data[i];
-                message += c;
-            }
+            //Si poses un msg y despres nom, has de treure per ordre, primer nom  y despres msg.
+            packet >> message;
             ShowMessage(message);
 
             _isServerMutex.lock();
@@ -174,20 +171,13 @@ void Chat::ListenKeyboardToSendMessage()
 
 void Chat::SendMessage(std::string message)
 {
-    char data[100] = {};
-
-    int stringSize = message.length();
-    for (int i = 0; i < stringSize; i++)
-    {
-        char c = message[i];
-        data[i] = c;
-    }
-
+    sf::Packet packet;
+    packet << message;
 
     _socketsMutex.lock();
     for (sf::TcpSocket* socket : _sockets)
     {
-        if (socket->send(data, 100) != sf::Socket::Done)
+        if (socket->send(packet) != sf::Socket::Done)
         {
             ShowError("Error Sending Message");
         }
