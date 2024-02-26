@@ -6,6 +6,7 @@ class SocketsManager
 {
 public:
 	typedef std::function<void(TcpSocket* socket)> OnSocketConnected;
+
 	SocketsManager(OnSocketConnected onSocketConnected);
 	~SocketsManager();
 
