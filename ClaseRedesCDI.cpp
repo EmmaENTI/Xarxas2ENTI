@@ -2,17 +2,22 @@
 #include <conio.h>
 #include <SFML/Network.hpp>
 #include "Chat.h"
+#include <SFML/Graphics.hpp>
 
 //CHAT DEL ABRAHAM
 void RunClient();
 void RunServer();
-
+void RunWindows();
 unsigned short port = 3001;
 
 int main()
 {
     std::cout << "Select" << std::endl << "Client -> C" << std::endl << "Server -> S" << std::endl;
     char mode = ' ';
+
+
+
+    RunWindows();
 
     do
     {
@@ -143,4 +148,29 @@ void RunServer()
             }
         }
     }*/
+}
+
+void RunWindows()
+{
+    sf::RenderWindow windows;
+    windows.create(sf::VideoMode(800, 600), "Chat");
+
+    sf::Text label;
+
+    sf::Font font;
+    font.loadFromFile("Minecraft.ttf");
+
+    label.setFont(font);
+    label.setCharacterSize(16);
+    label.setFillColor(sf::Color::White);
+    label.setString("Hello World");
+    label.setPosition(0, 0);
+
+    while (windows.isOpen())
+    {
+        windows.clear(sf::Color::Black);
+        windows.draw(label);
+        windows.display();
+    }
+
 }
