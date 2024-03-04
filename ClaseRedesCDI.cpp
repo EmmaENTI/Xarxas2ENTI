@@ -3,12 +3,15 @@
 #include <SFML/Network.hpp>
 #include "Chat.h"
 #include <SFML/Graphics.hpp>
+#include "ConnectionAbstraction/SocketsManager.h"
 
 //CHAT DEL ABRAHAM
 void RunClient();
 void RunServer();
 void RunWindows();
 unsigned short port = 3001;
+
+enum PackagesIds: Packet::PacketKey { Message = 0 };
 
 int main()
 {
@@ -17,7 +20,7 @@ int main()
 
 
 
-    RunWindows();
+    //RunWindows();
 
     do
     {
@@ -56,13 +59,38 @@ int main()
 void RunClient()
 {
     std::cout << "Client";
-
-    std::cout << std::endl << "Set Server IP-> ";
+    std::cout << std::endl << "Set Server IP --> ";
     std::string ip;
     std::getline(std::cin, ip);
 
-    Chat* chat = Chat::Client(ip, port);
+    SocketsManager* SM = new SocketsManager([](TcpSocket* socket)
+        {
+            std::cout << std::endl << "Socket Connected: " << socket->getRemoteAddress().toString();
 
+            socket->Subscribe(Message, [socket](Packet packet)
+                {
+                    std::string message;
+                    packet >> message;
+                    std::cout << std::endl << "New Message: " << message;
+                });
+
+            socket->SubscribeOnDisconnect([](TcpSocket* socket)
+                {
+                    std::cout << std::endl << "Socket disconnected: " << socket->getRemoteAddress().toString();
+                });
+
+            std::string message = "Hola soy el cliente";
+            Packet packet;
+            packet << message;
+
+            socket->Send(Message, packet);
+
+    });
+
+    if (SM->ConnectToServer(ip, port))
+    {
+        SM->StartLoop();
+    }
 
     //OLD
     /*sf::TcpSocket socket;
@@ -102,6 +130,35 @@ void RunServer()
     std::cout << "Server";
     Chat* chat = Chat::Server(port);
 
+    SocketsManager* SM = new SocketsManager([](TcpSocket* socket)
+        {
+            std::cout << std::endl << "Socket Connected: " << socket->getRemoteAddress().toString();
+
+            socket->Subscribe(Message, [socket](Packet packet)
+                {
+                    std::string message;
+                    packet >> message;
+                    std::cout << std::endl << "New Message: " << message;
+
+                    std::string response = "Pues yo soy el server";
+                    Packet responsePacket;
+                    responsePacket << response;
+
+                    socket->Send(Message, responsePacket);
+                });
+
+            socket->SubscribeOnDisconnect([](TcpSocket* socket)
+                {
+                    std::cout << std::endl << "Socket disconnected: " << socket->getRemoteAddress().toString();
+                });
+        });
+
+    if (SM->StartListener(port))
+    {
+        sf::IpAddress ipAddress = sf::IpAddress::getLocalAddress();
+        std::cout << "Listening on IP: " << ipAddress.toString();
+        SM->StartLoop();
+    }
 
     /*sf::TcpListener listener;
 
