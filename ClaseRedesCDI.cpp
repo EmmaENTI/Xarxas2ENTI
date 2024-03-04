@@ -4,6 +4,7 @@
 #include "Chat.h"
 #include <SFML/Graphics.hpp>
 #include "ConnectionAbstraction/SocketsManager.h"
+#include "WindowsHelpers/Window.h"
 
 //CHAT DEL ABRAHAM
 void RunClient();
@@ -19,8 +20,7 @@ int main()
     char mode = ' ';
 
 
-
-    //RunWindows();
+    RunWindows();
 
     do
     {
@@ -209,8 +209,20 @@ void RunServer()
 
 void RunWindows()
 {
-    sf::RenderWindow windows;
+
+    Window window;
+    Button* bt = new Button(50, 20, "Piezas/QG.png");
+    bt->onClick = []() 
+    {
+        std::cout << std::endl << "Long Live The Queen";
+    };
+
+    window.AddButton(bt);
+    window.RunWindowsLoop();
+
+   /* sf::RenderWindow windows;
     windows.create(sf::VideoMode(800, 600), "Chat");
+    windows.setFramerateLimit(60);
 
     sf::Text label;
 
@@ -228,6 +240,6 @@ void RunWindows()
         windows.clear(sf::Color::Black);
         windows.draw(label);
         windows.display();
-    }
+    }*/
 
 }
