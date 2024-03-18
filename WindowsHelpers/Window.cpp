@@ -88,3 +88,21 @@ void Window::RunWindowsLoop()
 	}
 
 }
+
+
+//Ajedrez
+
+//void Window::InitChessBoard() {
+//	// Lógica para crear y posicionar los botones que representan el tablero de ajedrez
+//	for (int i = 0; i < 8; ++i) {
+//		std::vector<Button*> row;
+//		for (int j = 0; j < 8; ++j) {
+//			Button* button = new Button(j * 64, i * 64, "texture_path_for_empty_square");
+//			// Asignar texturas de piezas según la posición en el tablero
+//			// Lo hacemos en plan poniendo el initial state del ajedrez al principio
+//			row.push_back(button);
+//			AddButton(button); //boton para cada button
+//		}
+//		_chessBoard.push_back(row);
+//	}
+//}

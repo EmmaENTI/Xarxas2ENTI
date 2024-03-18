@@ -17,6 +17,11 @@ public:
 	void AddButton(Button* bt);
 	void RunWindowsLoop(); 
 
+
+
+	//Ajedrez
+	//void InitChessBoard();
+
 private:
 	
 	std::mutex _mutex;
@@ -25,5 +30,8 @@ private:
 	Button* _lastClickedDownBt;
 	std::list<Button*> _buttons;
 	std::list<sf::Drawable*> _objectsToDraw;
+
+	//Ajedrez
+	//std::vector<std::vector<Button*>> _chessBoard; // Matriz de botones para representar el tablero
 };
 
