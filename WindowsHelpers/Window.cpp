@@ -85,8 +85,27 @@ void Window::RunWindowsLoop()
 				}
 			}
 		}
+
+		//Execute the tasks
+		_taskMutex.lock();
+
+		size_t size = _tasks.size();
+		for (int i = 0; i < size; i++)
+		{
+			_tasks[i]();
+		}
+		//Es neteja perque nomes la fas un cop, has de resetear per asegurarte que les tasques al tornar a utilitzarles son netes
+		_tasks.clear();
+		_taskMutex.unlock();
 	}
 
+}
+
+void Window::AddTask(Task task)
+{
+	_taskMutex.lock();
+	_tasks.push_back(task);
+	_taskMutex.unlock();
 }
 
 

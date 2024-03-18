@@ -20,6 +20,12 @@ public:
 	//Ajedrez
 	//void InitChessBoard();
 
+	//Lambda fer per tasques
+	//Les tasks son function voids en public
+	typedef std::function<void()> Task;
+	//Afegir les tasques, aixo es el que cridaran les peces per fer accions, la window afegira la lambda de tasques segons el que necesitis
+	void AddTask(Task task);
+
 private:
 	
 	std::mutex _mutex;
@@ -31,5 +37,12 @@ private:
 
 	//Ajedrez
 	//std::vector<std::vector<Button*>> _chessBoard; // Matriz de botones para representar el tablero
+
+
+
+	//lambda, llista de tasques
+
+	std::vector<Task> _tasks;
+	std::mutex _taskMutex;
 };
 
