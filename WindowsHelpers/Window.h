@@ -17,8 +17,6 @@ public:
 	void AddButton(Button* bt);
 	void RunWindowsLoop(); 
 
-
-
 	//Ajedrez
 	//void InitChessBoard();
 
